@@ -85,7 +85,7 @@ def calc_user_stats(handle, user_rating):
     return points
 
 
-def solve():
+def get_raw_data():
     users = get_data()
     stats_by_user = {} 
     users_by_contest_id = {}
@@ -170,7 +170,7 @@ def solve():
     fout.write(str(dataset))
     df.to_csv('dataset.csv')
 
-def prepare_data():
+def normalize_data():
     df = pd.read_csv('dataset.csv')
     df = df.drop(df.columns[0], axis=1)
     df = df.drop('handle', axis=1)
@@ -181,10 +181,10 @@ def prepare_data():
     df['rating'] = df['rating'] / 4000
     df.to_csv('normalized_dataset.csv', index=False)
 
-#solve()
-#prepare_data()
+#get_raw_data()
+#normalize_data()
 
-def solve():
+def build_model():
     df = pd.read_csv('normalized_dataset.csv')
     y = df['is_solved']
     x = df
@@ -244,5 +244,5 @@ def solve():
     #print(model.predict(pd.DataFrame(inputs)))
  
 
-solve()
+build_model()
 
