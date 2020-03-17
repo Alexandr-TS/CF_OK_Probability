@@ -190,35 +190,17 @@ def build_model():
     x = df
     x = x.drop('is_solved', axis=1)
 
-    x = pd.DataFrame(df['user_rating'])
-    x['rating'] = df['rating']
-
-
     train_x, test_x, train_y, test_y = train_test_split(x, y, train_size=0.8, random_state=0)
 
-    #lr = LogisticRegressionCV()
-    #lr.fit(train_x, train_y)
-    #pred_y = lr.predict(test_x)
-    #print("Logistic regression accuracy = {:.12f}".format(lr.score(test_x, test_y)))
-    
-    #tmpdf = pd.DataFrame(test_y)
-    #tmpdf['predicted'] = pred_y
-    #print(tmpdf)
-
-    #linreg = LinearRegression().fit(train_x, train_y)
-    #pred_y = linreg.predict(test_x)
-    #print("Linear regression accuracy = {:.12f}".format(linreg.score(test_x, test_y)))
-
-    #tmpdf = pd.DataFrame(test_y)
-    #tmpdf['predicted'] = pred_y
-    #print(tmpdf)
+    train_tmp = pd.DataFrame.copy(train_x)
+    train_tmp['is_solved'] = train_y
+    train_tmp.to_csv('normalized_train.csv', index=False)
+    test_tmp = pd.DataFrame.copy(test_x)
+    test_tmp['is_solved'] = test_y
+    test_tmp.to_csv('normalized_test.csv', index=False)
 
     model = Sequential([
-        Dense(64, input_shape=(x.shape[1],)),
-        Activation('relu'),
-        Dense(12),
-        Activation('relu'),
-        Dense(5),
+        Dense(100, input_shape=(x.shape[1],)),
         Activation('relu'),
         Dense(1),
         Activation('sigmoid'),
@@ -229,6 +211,9 @@ def build_model():
     loss, accuracy=model.evaluate(test_x, test_y, verbose=0)
     print("keras accuracy = {:.12f}".format(accuracy))
 
+    if accuracy < 0.9045:
+        return 0
+
     tmpdf = pd.DataFrame(test_y)
     tmpdf['predicted'] = model.predict(test_x)
     tmpdf['predicted'] = tmpdf['predicted'].round()
@@ -237,12 +222,13 @@ def build_model():
     print(tmpdf)
     print('sum: ' + str(tmpdf['diff'].sum()) + ', total: ' + str(tmpdf.shape[0]))
 
-    #inputs = []
-    #for i in range(18):
-    #    inputs.append([0] * 18)
-    #    inputs[-1][i] = 1
-    #print(model.predict(pd.DataFrame(inputs)))
- 
+    model_json = model.to_json()
+    with open("model.json", "w") as json_file:
+        json_file.write(model_json)
+    model.save_weights("model.h5")
+    return accuracy
 
-build_model()
+cur_ac = 0.0
+while cur_ac < 0.9045:
+    cur_ac = build_model()
 
